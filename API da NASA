@@ -1,0 +1,27 @@
+import requests
+
+dia = input("Digite o Dia: ")
+mes = input("Digite o Mes: ")
+ano = input("Digite o Ano: ")
+
+# This API endpoint returns a list of public holidays in the US for 2020.
+url = f"https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date={ano}-{mes}-{dia}&camera=&api_key=gQVsuaa7zICrbbx8XC1l881pK9gzNSMPId0wtBt1"
+
+# Send a GET request to the API endpoint.
+response = requests.get(url)
+
+# If the request was successful, print the JSON response.
+if response.status_code == 200:
+    json_data = response.json()
+    # Check if the 'photos' key is present in the JSON response
+    if 'photos' in json_data:
+        # Extract the photo URLs from the 'photos' key
+        photo_urls = [photo['img_src'] for photo in json_data['photos']]
+        # Print the list of photo URLs
+        for url in photo_urls:
+            print(url)
+    else:
+        print("No photos found in the JSON response.")
+else:
+    print("Failed to retrieve data from the API:", response.status_code)
+
