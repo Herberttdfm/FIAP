@@ -1,27 +1,91 @@
 import requests
 
-dia = input("Digite o Dia: ")
-mes = input("Digite o Mes: ")
-ano = input("Digite o Ano: ")
 
-# This API endpoint returns a list of public holidays in the US for 2020.
-url = f"https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date={ano}-{mes}-{dia}&camera=&api_key=gQVsuaa7zICrbbx8XC1l881pK9gzNSMPId0wtBt1"
+api_key = "gQVsuaa7zICrbbx8XC1l881pK9gzNSMPId0wtBt1"
+parametros = {
+    'api_key': api_key
+}
 
-# Send a GET request to the API endpoint.
+resposta = requests.get(f"https://api.nasa.gov/mars-photos/api/v1/manifests/spirit", params=parametros)
+
+
+# Criando um dicionario pra guardar Ano e Fotos naquele ano
+fotos_por_ano = {}
+
+if resposta.status_code == 200:
+    dados_json = resposta.json()
+    for foto in dados_json['photo_manifest']['photos']:
+        if 'MINITES' in foto['cameras']:
+            ano = foto['earth_date'][:4]  # 4 primeiros digitos do parametro earth_date são o ano. PS: em [:4] o primeiro numero é a partir de onde comecar e o 4 é ate onde
+            if ano in fotos_por_ano:
+                fotos_por_ano[ano] += 1  # Adiciona uma foto pra um ano que ja ta no dicionario (ou lista, sla a nomeclatura)
+            else:
+                fotos_por_ano[ano] = 1  # Adiciona um novo ano com valor de 1
+
+# Ve se tem foto e printa quantas tem por ano (sai em varias linhas pq são varios print no loop)
+if fotos_por_ano:
+    print("Quantas fotos tem em cada ano:")
+    for ano, quantidade in fotos_por_ano.items():
+        print(f"Ano {ano}, temos {quantidade} fotos.")
+else:
+    print("Não foram encontradas fotos da câmera MINITES.")
+
+
+
+
+
+fotos_por_mes = {} # Achei que a lista se criaria sozinha
+
+ano_selecionado = input("Escolha um ano: ") # no final o input é como String msm e ñ como Int
+if ano_selecionado in fotos_por_ano:
+  for foto in dados_json['photo_manifest']['photos']: # vou iterar sobre a lista inteira dnv
+        if 'MINITES' in foto['cameras'] and foto['earth_date'].startswith(ano_selecionado): # Demorei p/ krl pra descobrir ".startswith",
+            mes = foto['earth_date'][5:7] # no Python a posição de inicio é excludente porem a final e inclusa
+            if mes in fotos_por_mes:
+              fotos_por_mes[mes] += 1 # vai somando o valor (qnt. fotos) para uma chave existente na lista, mes no caso
+            else:
+              fotos_por_mes[mes] = 1 # se n tiver aquela chave(mes) ele vai definir com o valor 1
+
+if fotos_por_mes:
+    print("Quantas fotos tem em cada mes:")
+    for mes, quantidade in fotos_por_mes.items():
+        print(f"Mes {mes}, temos {quantidade} fotos.")
+else:
+    print("Não foram encontradas fotos da câmera MINITES.")
+
+
+
+
+
+fotos_por_dia = {}
+
+mes_selecionado = input("Escolha um mes: ")
+if mes_selecionado in fotos_por_mes:
+  for foto in dados_json['photo_manifest']['photos']:
+        if 'MINITES' in foto['cameras'] and foto['earth_date'].startswith(ano_selecionado + "-" + mes_selecionado):
+            dia = foto['earth_date'][8:]
+            if dia in fotos_por_dia:
+              fotos_por_dia[dia] += 1
+            else:
+              fotos_por_dia[dia] = 1
+
+if fotos_por_dia:
+    print("Quantas fotos tem em cada dia:")
+    for dia, quantidade in fotos_por_dia.items(): # Pega as duplas de um dic. Ele vai atribuir assim (dia a dia e qnt a qnt) simplesmente pela ordem que colocamos
+        print(f"Dia {dia}, temos {quantidade} fotos.") # Ai depois aqui a gente ajeita como quiser
+else:
+    print("Não foram encontradas fotos da câmera MINITES.")
+
+
+dia_selecionado = input("Escolha um dia: ")
+
+
+url = f"https://api.nasa.gov/mars-photos/api/v1/rovers/Spirit/photos?earth_date={ano_selecionado}-{mes_selecionado}-{dia_selecionado}&api_key=gQVsuaa7zICrbbx8XC1l881pK9gzNSMPId0wtBt1&camera=MINITES"
+
 response = requests.get(url)
 
-# If the request was successful, print the JSON response.
 if response.status_code == 200:
     json_data = response.json()
-    # Check if the 'photos' key is present in the JSON response
-    if 'photos' in json_data:
-        # Extract the photo URLs from the 'photos' key
-        photo_urls = [photo['img_src'] for photo in json_data['photos']]
-        # Print the list of photo URLs
-        for url in photo_urls:
-            print(url)
-    else:
-        print("No photos found in the JSON response.")
-else:
-    print("Failed to retrieve data from the API:", response.status_code)
+    for photo in json_data['photos']:
+      print(photo['img_src'])
 
